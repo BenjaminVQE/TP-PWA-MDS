@@ -34,7 +34,7 @@ jobs:
 
       - name: SSH into VPS and deploy  
         run: |
-          ssh $VPS_USER@$VPS_IP << 'EOF'
+          ssh $VPS_USER@$VPS_IP "bash -s" << EOF
             echo "--Start Pulling image--"
             sudo docker pull $REGISTRY_NAME/pwa-messenger:latest
             echo "--End Pulling image--"
