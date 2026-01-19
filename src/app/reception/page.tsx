@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getUser } from "@/lib/storage";
+import { getUser, saveRooms } from "@/lib/storage";
 import { User, Room } from "@/lib/types";
 import UserProfile from "@/components/UserProfile";
 import OfflineIndicator from "@/components/OfflineIndicator";
@@ -37,6 +37,7 @@ export default function Reception() {
         setIsLoading(true);
         const apiRooms = await fetchRooms();
         setRooms(apiRooms);
+        saveRooms(apiRooms); // Persist fetched rooms to local storage
         setIsLoading(false);
     };
 
@@ -127,8 +128,12 @@ export default function Reception() {
                 </div>
             ) : (
                 <div style={{ display: "grid", gap: "0.75rem" }}>
-                    {rooms.map((room) => (
-                        <Link key={room.id} href={`/room/${room.id}`} style={{ textDecoration: "none", display: "block" }}>
+                    {rooms.map((room, idx) => (
+                        <Link
+                            key={`${room.id}-${idx}`}
+                            href={`/room/${encodeURIComponent(room.id)}`}
+                            style={{ textDecoration: "none", display: "block" }}
+                        >
                             <div className="glass" style={{
                                 padding: "1rem",
                                 borderRadius: "0.75rem",

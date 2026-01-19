@@ -14,6 +14,22 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async rewrites() {
+    return [
+      {
+        source: "/socket.io",
+        destination: "https://api.tools.gavago.fr/socket.io/",
+      },
+      {
+        source: "/socket.io/:path*",
+        destination: "https://api.tools.gavago.fr/socket.io/:path*",
+      },
+      {
+        source: "/socketio/api/:path*",
+        destination: "https://api.tools.gavago.fr/socketio/api/:path*",
+      },
+    ];
+  },
 };
 
 export default withPWA(nextConfig);

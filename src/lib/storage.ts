@@ -29,18 +29,30 @@ export const saveUser = (user: User) => setLocalStorage(STORAGE_KEYS.USER, user)
 
 // Rooms
 export const getRooms = (): Room[] => {
-    return getLocalStorage(STORAGE_KEYS.ROOMS) || [
-        { id: "general", name: "General Chat" },
-        { id: "tech", name: "Tech Talk" },
-        { id: "random", name: "Random" },
-    ]; // Default rooms
+    return getLocalStorage(STORAGE_KEYS.ROOMS)
 };
+export const saveRooms = (newRooms: Room[]) => {
+    const existingRooms = getRooms();
+    const updatedRooms = [...existingRooms];
+
+    newRooms.forEach(newRoom => {
+        const index = updatedRooms.findIndex(r => r.id === newRoom.id);
+        if (index > -1) {
+            // Keep existing lastMessage/lastActivity if not present in newRoom
+            updatedRooms[index] = {
+                ...updatedRooms[index],
+                ...newRoom
+            };
+        } else {
+            updatedRooms.push(newRoom);
+        }
+    });
+
+    setLocalStorage(STORAGE_KEYS.ROOMS, updatedRooms);
+};
+
 export const saveRoom = (room: Room) => {
-    const rooms = getRooms();
-    const index = rooms.findIndex((r) => r.id === room.id);
-    if (index > -1) rooms[index] = room;
-    else rooms.push(room);
-    setLocalStorage(STORAGE_KEYS.ROOMS, rooms);
+    saveRooms([room]);
 };
 
 // Messages

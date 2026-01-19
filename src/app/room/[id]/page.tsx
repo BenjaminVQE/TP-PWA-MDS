@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getUser, getMessages, saveMessage, getRooms, saveRoom, savePhoto } from "@/lib/storage";
+import { getUser, getMessages, saveMessage, getRooms, savePhoto } from "@/lib/storage";
 import { User, Message, Room, Photo } from "@/lib/types";
 import CameraCapture from "@/components/CameraCapture";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import socket from "@/lib/socket";
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -16,7 +17,12 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState("");
     const [showCamera, setShowCamera] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
+    const [participants, setParticipants] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    // Sert à ignorer l'echo serveur de nos propres messages (anti-doublon)
+    // On garde une trace des messages envoyés récemment (contenu + pseudo + timestamp)
+    const recentSentMessagesRef = useRef<Map<string, number>>(new Map());
     const router = useRouter();
 
     useEffect(() => {
@@ -43,14 +49,149 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         }
     }, [id, router]);
 
+    // Socket.IO Integration
+    useEffect(() => {
+        if (!room || !user) return;
+
+        socket.connect();
+
+        const onConnect = () => {
+            console.log("Connected to Socket.IO server");
+            setIsConnected(true);
+
+            socket.emit("chat-join-room", {
+                roomName: room.name,
+                pseudo: user.pseudo,
+                userId: user.id
+            });
+        };
+
+        const onDisconnect = () => {
+            console.log("Disconnected from server");
+            setIsConnected(false);
+        };
+
+        const onMessage = (data: any) => {
+            console.log("Message received:", data);
+
+            const messageContent = data.content || data.message || "";
+            const messagePseudo = data.pseudo || data.username || data.sender || "";
+            const messageUserId = data.userId || data.senderId || "";
+            const messageTimestamp = data.dateEmis
+                ? new Date(data.dateEmis).getTime()
+                : data.timestamp
+                    ? new Date(data.timestamp).getTime()
+                    : Date.now();
+
+            // Détection de doublon pour nos propres messages
+            if ((messageUserId === user.id || messagePseudo === user.pseudo) && messageContent.trim()) {
+                const messageKey = `${messageContent.trim()}_${messagePseudo}`;
+                const sentTimestamp = recentSentMessagesRef.current.get(messageKey);
+
+                // Si on a envoyé ce message récemment (< 3 secondes), c'est un doublon - on l'ignore
+                if (sentTimestamp && Math.abs(messageTimestamp - sentTimestamp) < 3000) {
+                    console.log("Message dupliqué ignoré (timestamp):", messageKey);
+                    recentSentMessagesRef.current.delete(messageKey);
+                    return;
+                }
+
+                // Vérifier aussi dans la liste des messages existants pour éviter les doublons
+                setMessages(prev => {
+                    const trimmedContent = messageContent.trim();
+                    const isDuplicate = prev.some(msg =>
+                        msg.senderId === user.id &&
+                        msg.content.trim() === trimmedContent &&
+                        Math.abs(msg.timestamp - messageTimestamp) < 2000
+                    );
+
+                    if (isDuplicate) {
+                        console.log("Message dupliqué détecté dans la liste existante, ignoré");
+                        return prev; // Retourner la liste inchangée
+                    }
+
+                    // Sinon, ajouter le message
+                    const newMessage: Message = {
+                        id: data.id || crypto.randomUUID(),
+                        roomId: id,
+                        senderId: messageUserId || "unknown",
+                        senderName: messagePseudo || "Inconnu",
+                        content: messageContent,
+                        timestamp: messageTimestamp,
+                    };
+                    saveMessage(newMessage);
+                    return [...prev, newMessage];
+                });
+                return;
+            }
+
+            const newMessage: Message = {
+                id: data.id || crypto.randomUUID(),
+                roomId: id,
+                senderId: messageUserId || "unknown",
+                senderName: messagePseudo || "Inconnu",
+                content: messageContent,
+                timestamp: messageTimestamp,
+            };
+
+            // Save and update state
+            saveMessage(newMessage);
+            setMessages(prev => [...prev, newMessage]);
+
+            // Notification pour messages en arrière-plan
+            if (document.hidden && "Notification" in window && Notification.permission === "granted") {
+                new Notification(`New message in ${room.name}`, {
+                    body: `${newMessage.senderName}: ${newMessage.content}`,
+                    icon: "/icons/icon-192x192.png"
+                });
+            }
+        };
+
+        const onRoomInfo = (data: any) => {
+            console.log("Room info:", data);
+            if (data.clients) {
+                setParticipants(Object.keys(data.clients).length);
+            } else if (data.participants) {
+                setParticipants(data.participants);
+            }
+        };
+
+        const onError = (msg: string) => {
+            console.error("Socket error:", msg);
+            alert(`Erreur du serveur: ${msg}.`);
+        };
+
+        socket.on("connect", onConnect);
+        socket.on("disconnect", onDisconnect);
+        socket.on("chat-msg", onMessage);
+        socket.on("chat-joined-room", onRoomInfo);
+        socket.on("chat-disconnected", onRoomInfo);
+        socket.on("error", onError);
+
+        if (socket.connected) {
+            onConnect();
+        }
+
+        return () => {
+            socket.emit("leave_room", { room: room.name, userId: user.id });
+            socket.off("connect", onConnect);
+            socket.off("disconnect", onDisconnect);
+            socket.off("chat-msg", onMessage);
+            socket.off("chat-joined-room", onRoomInfo);
+            socket.off("chat-disconnected", onRoomInfo);
+            socket.off("error", onError);
+            socket.disconnect();
+        };
+    }, [room, user, id]);
+
     // Scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
     const sendMessage = (content: string, imageUrl?: string) => {
-        if (!user || (!content.trim() && !imageUrl)) return;
+        if (!user || !room || (!content.trim() && !imageUrl)) return;
 
+        const timestamp = Date.now();
         const newMessage: Message = {
             id: crypto.randomUUID(),
             roomId: id,
@@ -58,10 +199,43 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
             senderName: user.pseudo,
             content: content,
             imageUrl: imageUrl,
-            timestamp: Date.now(),
+            timestamp: timestamp,
         };
 
-        // Save
+        // Emit to socket
+        if (isConnected) {
+            socket.emit("chat-msg", {
+                content,
+                roomName: room.name,
+                userId: user.id,
+                pseudo: user.pseudo,
+                categorie: "MESSAGE",
+                dateEmis: new Date(timestamp).toISOString(),
+                imageUrl: imageUrl
+            });
+
+            // Compat anciens backends
+            socket.emit("send_message", {
+                room: room.name,
+                message: content,
+                username: user.pseudo,
+                userId: user.id,
+                timestamp: new Date(timestamp).toISOString(),
+                imageUrl: imageUrl // Optional extension if backend supports it
+            });
+        }
+
+        // Enregistre ce message comme envoyé récemment pour détecter les doublons
+        if (content.trim()) {
+            const messageKey = `${content.trim()}_${user.pseudo}`;
+            recentSentMessagesRef.current.set(messageKey, timestamp);
+            // Nettoie après 10 secondes pour éviter une fuite mémoire
+            setTimeout(() => {
+                recentSentMessagesRef.current.delete(messageKey);
+            }, 10000);
+        }
+
+        // Save locally
         saveMessage(newMessage);
 
         // Update local state
@@ -124,7 +298,17 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                     <Link href="/reception" style={{ fontSize: "1.25rem", padding: "0 0.5rem", textDecoration: "none" }}>←</Link>
                     <div>
                         <h1 style={{ fontWeight: "bold", fontSize: "1.125rem" }}>{room.name}</h1>
-                        <span style={{ fontSize: "0.75rem", color: "#22c55e", display: "block" }}>Online</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span style={{
+                                width: "0.5rem",
+                                height: "0.5rem",
+                                borderRadius: "50%",
+                                background: isConnected ? "#22c55e" : "#ef4444"
+                            }}></span>
+                            <span style={{ fontSize: "0.75rem", opacity: 0.8 }}>
+                                {isConnected ? `${participants} participants` : 'Connecting...'}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <button onClick={leaveRoom} style={{ color: "#ef4444", fontSize: "0.875rem", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>
@@ -145,7 +329,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                                 borderBottomRightRadius: isMe ? 0 : "1rem",
                                 borderBottomLeftRadius: isMe ? "1rem" : 0,
                                 background: isMe ? "var(--primary-gradient)" : "white",
-                                color: isMe ? "white" : "var(--foreground)",
+                                // Sur certains thèmes, --foreground peut être blanc => texte invisible sur bulle blanche
+                                color: isMe ? "white" : "#111827",
                                 boxShadow: isMe ? "none" : "0 1px 2px 0 rgb(0 0 0 / 0.05)"
                             }}>
                                 {!isMe && <div style={{ fontSize: "0.75rem", opacity: 0.75, marginBottom: "0.25rem" }}>{msg.senderName}</div>}

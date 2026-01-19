@@ -19,6 +19,7 @@ export interface Room {
     name: string;
     lastMessage?: string;
     lastActivity?: number;
+    participants?: number;
 }
 
 export interface Photo {
