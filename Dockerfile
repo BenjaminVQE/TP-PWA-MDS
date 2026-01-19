@@ -12,12 +12,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 CMD ["npm", "run", "dev"]
 
-FROM base AS prod
+FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
+
 FROM base AS prod
 WORKDIR /app
 ENV NODE_ENV production
