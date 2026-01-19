@@ -29,10 +29,10 @@ export const saveUser = (user: User) => setLocalStorage(STORAGE_KEYS.USER, user)
 
 // Rooms
 export const getRooms = (): Room[] => {
-    return getLocalStorage(STORAGE_KEYS.ROOMS)
+    return getLocalStorage(STORAGE_KEYS.ROOMS) || [];
 };
 export const saveRooms = (newRooms: Room[]) => {
-    const existingRooms = getRooms();
+    const existingRooms = getRooms() || [];
     const updatedRooms = [...existingRooms];
 
     newRooms.forEach(newRoom => {

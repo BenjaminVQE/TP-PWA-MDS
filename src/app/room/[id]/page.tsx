@@ -33,7 +33,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         }
         setUser(loadedUser);
 
-        const rooms = getRooms();
+        const rooms = getRooms() || [];
         const currentRoom = rooms.find((r) => r.id === id);
         if (currentRoom) {
             setRoom(currentRoom);
