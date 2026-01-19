@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "PWA Messenger",
+  title: "Ben Messenger",
   description: "Offline-first messaging application",
   manifest: "/manifest.json",
   icons: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "PWA Messenger",
+    title: "Ben Messenger",
   },
 };
 

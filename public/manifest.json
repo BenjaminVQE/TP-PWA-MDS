@@ -1,6 +1,6 @@
 {
-    "name": "TP PWA Messenger",
-    "short_name": "PWA Messenger",
+    "name": "Ben Messenger",
+    "short_name": "Ben Messenger",
     "description": "A progressive web application for messaging",
     "start_url": "/",
     "display": "standalone",
