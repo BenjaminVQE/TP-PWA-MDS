@@ -3,16 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getUser, getRooms, saveRoom } from "@/lib/storage";
+import { getUser } from "@/lib/storage";
 import { User, Room } from "@/lib/types";
 import UserProfile from "@/components/UserProfile";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import socket from "@/lib/socket";
+import { fetchRooms } from "@/lib/api";
 
 export default function Reception() {
     const [user, setUser] = useState<User | null>(null);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [isEditingProfile, setIsEditingProfile] = useState(false);
-    const [newRoomName, setNewRoomName] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -20,26 +22,27 @@ export default function Reception() {
         if (loadedUser) setUser(loadedUser);
         else setIsEditingProfile(true);
 
-        setRooms(getRooms());
+        // Connect socket
+        socket.connect();
+
+        // Load rooms from API
+        loadRooms();
+
+        return () => {
+            socket.disconnect();
+        };
     }, []);
+
+    const loadRooms = async () => {
+        setIsLoading(true);
+        const apiRooms = await fetchRooms();
+        setRooms(apiRooms);
+        setIsLoading(false);
+    };
 
     const handleProfileSave = () => {
         setUser(getUser());
         setIsEditingProfile(false);
-    };
-
-    const createRoom = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newRoomName.trim()) return;
-        const newRoom: Room = {
-            id: crypto.randomUUID(),
-            name: newRoomName,
-            lastActivity: Date.now(),
-            lastMessage: "Created room"
-        };
-        saveRoom(newRoom);
-        setRooms(getRooms());
-        setNewRoomName("");
     };
 
     if (isEditingProfile) {
@@ -97,52 +100,55 @@ export default function Reception() {
             </header>
 
             {/* Room List */}
-            <h3 style={{ fontSize: "1.25rem", fontWeight: "bold", marginBottom: "1rem", paddingLeft: "0.5rem" }}>Rooms</h3>
-            <div style={{ display: "grid", gap: "0.75rem" }}>
-                {rooms.map((room) => (
-                    <Link key={room.id} href={`/room/${room.id}`} style={{ textDecoration: "none", display: "block" }}>
-                        <div className="glass" style={{
-                            padding: "1rem",
-                            borderRadius: "0.75rem",
-                            position: "relative",
-                            transition: "background 0.2s"
-                        }}>
-                            <h4 style={{ fontWeight: "bold", fontSize: "1.125rem" }}>{room.name}</h4>
-                            <p style={{ fontSize: "0.875rem", color: "var(--foreground)", opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                {room.lastMessage || "No messages yet"}
-                            </p>
-                            {room.lastActivity && (
-                                <span style={{ position: "absolute", top: "1rem", right: "1rem", fontSize: "0.75rem", opacity: 0.5 }}>
-                                    {new Date(room.lastActivity).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            )}
-                        </div>
-                    </Link>
-                ))}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", paddingLeft: "0.5rem" }}>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "bold" }}>Rooms</h3>
+                <button
+                    onClick={loadRooms}
+                    disabled={isLoading}
+                    className="btn-primary"
+                    style={{
+                        padding: "0.5rem 1rem",
+                        fontSize: "0.875rem",
+                        opacity: isLoading ? 0.5 : 1,
+                        cursor: isLoading ? "not-allowed" : "pointer"
+                    }}
+                >
+                    {isLoading ? "Loading..." : "🔄 Reload"}
+                </button>
             </div>
 
-            {/* Create Room */}
-            <form onSubmit={createRoom} className="glass" style={{ marginTop: "2rem", padding: "1rem", borderRadius: "0.75rem" }}>
-                <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.5rem" }}>Create New Room</label>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <input
-                        type="text"
-                        value={newRoomName}
-                        onChange={(e) => setNewRoomName(e.target.value)}
-                        placeholder="Room Name"
-                        style={{
-                            flex: 1,
-                            padding: "0.5rem",
-                            borderRadius: "0.5rem",
-                            border: "1px solid var(--border)",
-                            background: "rgba(255,255,255,0.5)"
-                        }}
-                    />
-                    <button type="submit" className="btn-primary" style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>
-                        + Add
-                    </button>
+            {isLoading && rooms.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "2rem", opacity: 0.5 }}>
+                    Loading rooms...
                 </div>
-            </form>
+            ) : rooms.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "2rem", opacity: 0.5 }}>
+                    No rooms available
+                </div>
+            ) : (
+                <div style={{ display: "grid", gap: "0.75rem" }}>
+                    {rooms.map((room) => (
+                        <Link key={room.id} href={`/room/${room.id}`} style={{ textDecoration: "none", display: "block" }}>
+                            <div className="glass" style={{
+                                padding: "1rem",
+                                borderRadius: "0.75rem",
+                                position: "relative",
+                                transition: "background 0.2s"
+                            }}>
+                                <h4 style={{ fontWeight: "bold", fontSize: "1.125rem" }}>{room.name}</h4>
+                                <p style={{ fontSize: "0.875rem", color: "var(--foreground)", opacity: 0.7, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {room.lastMessage || "No messages yet"}
+                                </p>
+                                {room.lastActivity && (
+                                    <span style={{ position: "absolute", top: "1rem", right: "1rem", fontSize: "0.75rem", opacity: 0.5 }}>
+                                        {new Date(room.lastActivity).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                )}
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            )}
         </main>
     );
 }

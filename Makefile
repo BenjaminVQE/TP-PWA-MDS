@@ -33,5 +33,14 @@ stop:
 logs:
 	docker compose -f compose.dev.yml logs -f || docker compose -f compose.yml logs -f
 
-install: build-dev build-prod
-	@echo "Installation complete. Run 'make dev' or 'make prod' to start."
+install:
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
+		echo "Running npm install in container..."; \
+		docker compose -f compose.dev.yml exec next-app-dev npm install; \
+	else \
+		echo "Installing package in container: $(filter-out $@,$(MAKECMDGOALS))"; \
+		docker compose -f compose.dev.yml exec next-app-dev npm install $(filter-out $@,$(MAKECMDGOALS)); \
+	fi
+
+%:
+	@:
