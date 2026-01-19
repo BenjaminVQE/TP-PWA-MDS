@@ -1,0 +1,15 @@
+services:
+  next-app-dev:
+    container_name: pwa-messenger-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
