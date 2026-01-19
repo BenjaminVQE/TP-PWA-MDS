@@ -41,5 +41,5 @@ jobs:
             sudo docker stop pwa-messenger-container || true
             sudo docker rm pwa-messenger-container || true
             echo "--Running container--"
-            sudo docker run -p 3000:3000 --name pwa-messenger-container -d --restart unless-stopped $REGISTRY_NAME/pwa-messenger:latest
+            sudo docker run -p 3010:3000 --name pwa-messenger-container -d --restart unless-stopped $REGISTRY_NAME/pwa-messenger:latest
           EOF
