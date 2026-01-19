@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PWA Messenger - BEN
 
-## Getting Started
+Application de messagerie Progressive Web App (PWA) construite avec Next.js et TypeScript.
 
-First, run the development server:
+## 🚀 Fonctionnalités
 
+- **Mode Offline** : Consultation des conversations et pièces jointes hors ligne
+- **Profil utilisateur** : Création/modification du pseudo et photo de profil
+- **Messagerie** : Création et participation à des salles de chat
+- **Caméra** : Prise de photos directement dans l'application
+- **Notifications** : Alertes lors de l'envoi de photos
+- **Stockage local** : Persistance des données avec LocalStorage
+
+## 📋 Prérequis
+
+- **Docker** et **Docker Compose** installés
+- Ou **Node.js 20+** et **npm** pour une installation locale
+
+## 🛠️ Installation
+
+### Option 1 : Avec Docker (Recommandé)
+
+#### Développement (avec hot-reload)
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+make dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### Production
+```bash
+make prod
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+#### Commandes Makefile disponibles
+```bash
+make help        # Afficher toutes les commandes
+make dev         # Démarrer en mode développement
+make prod        # Démarrer en mode production
+make stop        # Arrêter tous les conteneurs
+make logs        # Voir les logs
+make build-dev   # Rebuild l'image de dev
+make build-prod  # Rebuild l'image de prod
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Option 2 : Installation locale
 
-## Learn More
+```bash
+# Installer les dépendances
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+# Développement
+npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Production
+npm run build
+npm start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌐 Accès
 
-## Deploy on Vercel
+L'application est accessible sur **http://localhost:3000**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📝 License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Projet réalisé dans le cadre du TP PWA - MDS
