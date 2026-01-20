@@ -35,8 +35,13 @@ export function useRoomSocket({
     const onDisconnect = () => setIsConnected(false);
 
     const onMsg = (data: any) => {
+
+
       // Si on a déjà envoyé ce message localement, on ignore
       if (data.localId && sentLocal.current.has(data.localId)) return;
+
+      // Si le message vient de nous (basé sur le pseudo), on ignore aussi
+      if (user && data.pseudo === user.pseudo) return;
 
       const msg: Message = {
         id: crypto.randomUUID(),
