@@ -12,7 +12,12 @@ const STORAGE_KEYS = {
 export const getLocalStorage = (key: string) => {
     if (typeof window !== "undefined") {
         const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : null;
+        try {
+            return item ? JSON.parse(item) : null;
+        } catch (error) {
+            console.error(`Error parsing localStorage key "${key}":`, error);
+            return null;
+        }
     }
     return null;
 };

@@ -8,13 +8,16 @@ import { User, Room } from "@/lib/types";
 import UserProfile from "@/components/UserProfile";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import socket from "@/lib/socket";
-import { fetchRooms } from "@/lib/api";
+import { fetchRooms, createRoom } from "@/lib/api";
 
 export default function Reception() {
     const [user, setUser] = useState<User | null>(null);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+    const [newRoomName, setNewRoomName] = useState("");
     const router = useRouter();
 
     useEffect(() => {
@@ -45,6 +48,25 @@ export default function Reception() {
         setUser(getUser());
         setIsEditingProfile(false);
     };
+
+    const handleCreateRoom = async () => {
+        if (!newRoomName.trim()) return;
+        setIsLoading(true);
+        const success = await createRoom(newRoomName);
+        if (success) {
+            setNewRoomName("");
+            setIsCreatingRoom(false);
+            await loadRooms();
+        } else {
+            alert("Failed to create room. It might already exist.");
+        }
+        setIsLoading(false);
+    };
+
+    // Filtrer les rooms selon la recherche
+    const filteredRooms = rooms.filter(room =>
+        room.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     if (isEditingProfile) {
         return (
@@ -116,19 +138,82 @@ export default function Reception() {
                 >
                     {isLoading ? "Loading..." : "🔄 Reload"}
                 </button>
+                <button
+                    onClick={() => setIsCreatingRoom(true)}
+                    className="btn-primary"
+                    style={{
+                        padding: "0.5rem 1rem",
+                        fontSize: "0.875rem",
+                        marginLeft: "0.5rem",
+                        cursor: "pointer"
+                    }}
+                >
+                    ➕ New
+                </button>
+            </div>
+
+            {/* Barre de recherche */}
+            <div style={{ marginBottom: "1rem" }}>
+                <div style={{ position: "relative" }}>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Rechercher un salon..."
+                        style={{
+                            width: "100%",
+                            padding: "0.75rem 1rem 0.75rem 2.5rem",
+                            borderRadius: "0.75rem",
+                            border: "1px solid var(--border)",
+                            background: "white",
+                            fontSize: "0.875rem",
+                            outline: "none",
+                            boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+                        }}
+                    />
+                    <span style={{
+                        position: "absolute",
+                        left: "0.75rem",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        fontSize: "1rem",
+                        opacity: 0.5
+                    }}>
+                        🔍
+                    </span>
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery("")}
+                            style={{
+                                position: "absolute",
+                                right: "0.75rem",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                fontSize: "1.25rem",
+                                opacity: 0.5,
+                                padding: "0.25rem"
+                            }}
+                        >
+                            ✕
+                        </button>
+                    )}
+                </div>
             </div>
 
             {isLoading && rooms.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "2rem", opacity: 0.5 }}>
                     Loading rooms...
                 </div>
-            ) : rooms.length === 0 ? (
+            ) : filteredRooms.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "2rem", opacity: 0.5 }}>
-                    No rooms available
+                    {searchQuery ? `Aucun salon trouvé pour "${searchQuery}"` : "No rooms available"}
                 </div>
             ) : (
                 <div style={{ display: "grid", gap: "0.75rem" }}>
-                    {rooms.map((room, idx) => (
+                    {filteredRooms.map((room, idx) => (
                         <Link
                             key={`${room.id}-${idx}`}
                             href={`/room/${encodeURIComponent(room.id)}`}
@@ -152,6 +237,68 @@ export default function Reception() {
                             </div>
                         </Link>
                     ))}
+                </div>
+            )}
+
+
+            {/* Create Room Modal */}
+            {isCreatingRoom && (
+                <div
+                    onClick={() => setIsCreatingRoom(false)}
+                    style={{
+                        position: "fixed",
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        background: "rgba(0,0,0,0.5)",
+                        zIndex: 50,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "1rem"
+                    }}>
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="glass"
+                        style={{
+                            padding: "1.5rem",
+                            borderRadius: "1rem",
+                            width: "100%",
+                            maxWidth: "300px",
+                            background: "var(--background)",
+                            border: "1px solid var(--border)"
+                        }}>
+                        <h3 style={{ fontWeight: "bold", marginBottom: "1rem" }}>New Room</h3>
+                        <input
+                            type="text"
+                            value={newRoomName}
+                            onChange={(e) => setNewRoomName(e.target.value)}
+                            placeholder="Room name..."
+                            autoFocus
+                            style={{
+                                width: "100%",
+                                padding: "0.75rem",
+                                borderRadius: "0.5rem",
+                                border: "1px solid var(--border)",
+                                marginBottom: "1rem",
+                                outline: "none"
+                            }}
+                        />
+                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+
+                            <button
+                                onClick={handleCreateRoom}
+                                disabled={!newRoomName.trim() || isLoading}
+                                className="btn-primary"
+                                style={{
+                                    padding: "0.5rem 1rem",
+                                    borderRadius: "0.5rem",
+                                    cursor: isLoading ? "wait" : "pointer",
+                                    opacity: (!newRoomName.trim() || isLoading) ? 0.5 : 1
+                                }}
+                            >
+                                {isLoading ? "Creating..." : "Create"}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </main>

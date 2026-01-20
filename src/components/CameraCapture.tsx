@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 interface CameraCaptureProps {
     onCapture: (imageDataUrl: string) => void;
@@ -48,10 +48,10 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
         }
     };
 
-    // Auto-start on mount
-    useState(() => {
+    useEffect(() => {
         startCamera();
-    });
+        return () => stopCamera();
+    }, []);
 
     return (
         <div style={{

@@ -26,8 +26,6 @@ export async function fetchRooms(): Promise<Room[]> {
                 }
 
                 return {
-                    // IMPORTANT: l'id doit rester unique/stable.
-                    // On utilise la clé renvoyée par l'API (pas de "slug") pour éviter les collisions.
                     id: roomName,
                     name: displayName,
                     lastActivity: Date.now(),
@@ -56,3 +54,23 @@ export function getRoomFromId(id: string): Room {
     };
 }
 
+export async function createRoom(roomName: string): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/socketio/api/rooms/${encodeURIComponent(roomName)}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.ok) {
+            return true;
+        } else {
+            console.error("Failed to create room:", response.statusText);
+            return false;
+        }
+    } catch (error) {
+        console.error("Error creating room:", error);
+        return false;
+    }
+}
