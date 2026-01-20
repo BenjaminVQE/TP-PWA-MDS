@@ -21,7 +21,7 @@ export default function MessageList({
             style={{
                 flex: 1,
                 overflowY: "auto",
-                padding: "1rem",
+                padding: "0.5rem",
                 display: "flex",
                 flexDirection: "column",
                 gap: "1rem"

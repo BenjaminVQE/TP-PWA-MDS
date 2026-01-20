@@ -67,8 +67,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         <main style={{
             display: "flex",
             flexDirection: "column",
-            height: "100vh",
-            maxHeight: "100vh",
+            height: "100dvh",
+            maxHeight: "100dvh",
             overflow: "hidden"
         }}>
             <OfflineIndicator />
@@ -103,7 +103,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                             padding: "1.5rem",
                             borderRadius: "1rem",
                             width: "100%",
-                            maxWidth: "300px",
+                            maxWidth: "min(300px, 90vw)",
                             maxHeight: "80vh",
                             overflowY: "auto",
                             background: "var(--background)",

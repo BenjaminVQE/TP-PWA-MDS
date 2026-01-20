@@ -14,7 +14,7 @@ export default function MessageInput({
         <div
             className="glass"
             style={{
-                padding: "1rem",
+                padding: "0.5rem",
                 borderTop: "1px solid var(--border)",
                 flexShrink: 0
             }}
