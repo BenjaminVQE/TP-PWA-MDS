@@ -13,7 +13,7 @@ export function useRoomSocket({
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }) {
   const [isConnected, setIsConnected] = useState(false);
-  const [participants, setParticipants] = useState(0);
+  const [participants, setParticipants] = useState<string[]>([]);
 
   // On stocke les messages envoyés localement pour les filtrer ensuite
   const sentLocal = useRef<Set<string>>(new Set());
@@ -57,8 +57,15 @@ export function useRoomSocket({
       setMessages(prev => [...prev, msg]);
     };
 
-    const onJoinedRoom = (d: any) =>
-      setParticipants(d.participants || Object.keys(d.clients || {}).length);
+    const onJoinedRoom = (d: any) => {
+      // Si d.clients est un objet, on récupère les pseudos
+      if (d.clients && typeof d.clients === "object") {
+        const pseudos = Object.values(d.clients).map((c: any) => c.pseudo || "Unknown");
+        setParticipants(pseudos);
+      } else {
+        setParticipants([]);
+      }
+    };
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);

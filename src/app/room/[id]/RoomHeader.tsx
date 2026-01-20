@@ -5,12 +5,14 @@ export default function RoomHeader({
     room,
     isConnected,
     participants,
-    onLeave
+    onLeave,
+    onParticipantsClick
 }: {
     room: Room;
     isConnected: boolean;
-    participants: number;
+    participants: string[];
     onLeave?: () => void;
+    onParticipantsClick?: () => void;
 }) {
     return (
         <header
@@ -56,10 +58,12 @@ export default function RoomHeader({
                     </h1>
 
                     <div
+                        onClick={onParticipantsClick}
                         style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "0.5rem"
+                            gap: "0.5rem",
+                            cursor: onParticipantsClick ? "pointer" : "default"
                         }}
                     >
                         <span
@@ -80,7 +84,7 @@ export default function RoomHeader({
                             }}
                         >
                             {isConnected
-                                ? `${participants} participants`
+                                ? `${participants.length} participants`
                                 : "Connecting..."}
                         </span>
                     </div>
