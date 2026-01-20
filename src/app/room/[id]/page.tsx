@@ -24,8 +24,17 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         setUser(u);
 
         const r = getRooms().find(r => r.id === id);
-        if (!r) return router.push("/reception");
-        setRoom(r);
+        if (r) {
+            setRoom(r);
+        } else {
+            // Room not in local storage yet (newly joined/created)
+            // Construct a temporary room object
+            setRoom({
+                id: id,
+                name: decodeURIComponent(id),
+                lastActivity: Date.now()
+            });
+        }
 
         setMessages(getMessages(id));
     }, [id, router]);
@@ -36,37 +45,37 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     if (!user || !room) return null;
 
     const leaveRoom = () => {
-    if (!room) return;
+        if (!room) return;
 
-    if (confirm("Are you sure you want to leave (unsubscribe) this room?")) {
-        const rooms = getRooms();
-        const updatedRooms = rooms.filter(r => r.id !== room.id);
+        if (confirm("Are you sure you want to leave (unsubscribe) this room?")) {
+            const rooms = getRooms();
+            const updatedRooms = rooms.filter(r => r.id !== room.id);
 
-        if (typeof window !== "undefined") {
-            localStorage.setItem("pwa_rooms", JSON.stringify(updatedRooms));
+            if (typeof window !== "undefined") {
+                localStorage.setItem("pwa_rooms", JSON.stringify(updatedRooms));
+            }
+
+            router.push("/reception");
         }
-
-        router.push("/reception");
-    }
-};
+    };
 
 
     return (
-        <main   style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        maxHeight: "100vh",
-        overflow: "hidden"
-    }}>
+        <main style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100vh",
+            maxHeight: "100vh",
+            overflow: "hidden"
+        }}>
             <OfflineIndicator />
 
-<RoomHeader
-    room={room}
-    isConnected={isConnected}
-    participants={participants}
-    onLeave={leaveRoom}
-/>
+            <RoomHeader
+                room={room}
+                isConnected={isConnected}
+                participants={participants}
+                onLeave={leaveRoom}
+            />
 
             <MessageList messages={messages} user={user} />
 

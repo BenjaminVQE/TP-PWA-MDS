@@ -8,7 +8,7 @@ import { User, Room } from "@/lib/types";
 import UserProfile from "@/components/UserProfile";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import socket from "@/lib/socket";
-import { fetchRooms, createRoom } from "@/lib/api";
+import { fetchRooms } from "@/lib/api";
 
 export default function Reception() {
     const [user, setUser] = useState<User | null>(null);
@@ -49,18 +49,12 @@ export default function Reception() {
         setIsEditingProfile(false);
     };
 
-    const handleCreateRoom = async () => {
+    const handleCreateRoom = () => {
         if (!newRoomName.trim()) return;
-        setIsLoading(true);
-        const success = await createRoom(newRoomName);
-        if (success) {
-            setNewRoomName("");
-            setIsCreatingRoom(false);
-            await loadRooms();
-        } else {
-            alert("Failed to create room. It might already exist.");
-        }
-        setIsLoading(false);
+        const roomName = newRoomName.trim();
+        setNewRoomName("");
+        setIsCreatingRoom(false);
+        router.push(`/room/${encodeURIComponent(roomName)}`);
     };
 
     // Filtrer les rooms selon la recherche

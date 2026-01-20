@@ -54,23 +54,4 @@ export function getRoomFromId(id: string): Room {
     };
 }
 
-export async function createRoom(roomName: string): Promise<boolean> {
-    try {
-        const response = await fetch(`${API_BASE_URL}/socketio/api/rooms/${encodeURIComponent(roomName)}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
 
-        if (response.ok) {
-            return true;
-        } else {
-            console.error("Failed to create room:", response.statusText);
-            return false;
-        }
-    } catch (error) {
-        console.error("Error creating room:", error);
-        return false;
-    }
-}
