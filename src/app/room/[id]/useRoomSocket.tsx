@@ -40,8 +40,8 @@ export function useRoomSocket({
       // Si on a déjà envoyé ce message localement, on ignore
       if (data.localId && sentLocal.current.has(data.localId)) return;
 
-      // Si le message vient de nous (basé sur le pseudo), on ignore aussi
-      if (user && data.pseudo === user.pseudo) return;
+      // Si le message vient de nous (basé sur le pseudo ou userId), on ignore aussi
+      if (user && (data.userId === user.id || data.pseudo === user.pseudo)) return;
 
       const msg: Message = {
         id: crypto.randomUUID(),
@@ -90,12 +90,15 @@ export function useRoomSocket({
     // On stocke l'id local
     sentLocal.current.add(localId);
 
+    // Si une image est fournie, le contenu devient l'image en Base64
+    const finalContent = imageUrl || content;
+
     const msg: Message = {
       id: crypto.randomUUID(),
       roomId: room.id,
       senderId: user.id,
       senderName: user.pseudo,
-      content,
+      content: finalContent,
       imageUrl,
       timestamp: Date.now()
     };
@@ -107,7 +110,7 @@ export function useRoomSocket({
       roomName: room.name,
       userId: user.id,
       pseudo: user.pseudo,
-      content,
+      content: finalContent,
       imageUrl,
       localId // 🔥 on l'envoie au serveur
     });

@@ -24,7 +24,12 @@ export const getLocalStorage = (key: string) => {
 
 export const setLocalStorage = (key: string, value: any) => {
     if (typeof window !== "undefined") {
-        localStorage.setItem(key, JSON.stringify(value));
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch (error) {
+            console.warn("LocalStorage quota exceeded. Offline backup paused.");
+            // On pourrait notifier l'utilisateur que le stockage est plein
+        }
     }
 };
 

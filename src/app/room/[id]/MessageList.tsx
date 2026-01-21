@@ -1,5 +1,5 @@
 import { Message, User } from "@/lib/types";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function MessageList({
     messages,
@@ -9,6 +9,7 @@ export default function MessageList({
     user: User;
 }) {
     const endRef = useRef<HTMLDivElement>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     // 🔽 Auto-scroll vers le bas à chaque nouveau message
     useEffect(() => {
@@ -70,16 +71,36 @@ export default function MessageList({
                                 <img
                                     src={msg.imageUrl}
                                     alt="Attachment"
+                                    onClick={() => setSelectedImage(msg.imageUrl || null)}
                                     style={{
                                         borderRadius: "0.5rem",
                                         marginBottom: "0.5rem",
                                         maxWidth: "100%",
-                                        maxHeight: "200px"
+                                        maxHeight: "200px",
+                                        cursor: "pointer"
                                     }}
                                 />
                             )}
 
-                            {msg.content && <p>{msg.content}</p>}
+                            {msg.content && (
+                                msg.content.startsWith("data:image/") ? (
+                                    !msg.imageUrl && (
+                                        <img
+                                            src={msg.content}
+                                            alt="Base64 Image"
+                                            onClick={() => setSelectedImage(msg.content)}
+                                            style={{
+                                                borderRadius: "0.5rem",
+                                                maxWidth: "100%",
+                                                maxHeight: "200px",
+                                                cursor: "pointer"
+                                            }}
+                                        />
+                                    )
+                                ) : (
+                                    <p>{msg.content}</p>
+                                )
+                            )}
 
                             <div
                                 style={{
@@ -100,6 +121,35 @@ export default function MessageList({
             })}
 
             <div ref={endRef} />
+
+            {selectedImage && (
+                <div
+                    onClick={() => setSelectedImage(null)}
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0,0,0,0.8)",
+                        zIndex: 100,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "zoom-out"
+                    }}
+                >
+                    <img
+                        src={selectedImage}
+                        alt="Enlarged"
+                        style={{
+                            maxWidth: "95vw",
+                            maxHeight: "95vh",
+                            objectFit: "contain"
+                        }}
+                    />
+                </div>
+            )}
         </div>
     );
 }
