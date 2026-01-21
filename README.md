@@ -1,64 +1,126 @@
-# PWA Messenger - BEN
+# 📱 PWA Messenger - GeoChat
 
-Application de messagerie Progressive Web App (PWA) construite avec Next.js et TypeScript.
+Une Progressive Web App (PWA) de messagerie instantanée moderne, permettant la discussion en temps réel, le partage de photos et la géolocalisation sur carte interactive. Construit avec **Next.js**, **Socket.IO** et **React Leaflet**.
 
-## 🚀 Fonctionnalités
+![Status](https://img.shields.io/badge/Status-Beta-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-- **Mode Offline** : Consultation des conversations et pièces jointes hors ligne
-- **Profil utilisateur** : Création/modification du pseudo et photo de profil
-- **Messagerie** : Création et participation à des salles de chat
-- **Caméra** : Prise de photos directement dans l'application
-- **Notifications** : Alertes lors de l'envoi de photos
-- **Stockage local** : Persistance des données avec LocalStorage
+## ✨ Fonctionnalités Principales
 
-## 📋 Prérequis
+### 💬 Messagerie Temps Réel
+- **Socket.IO** : Communication bidirectionnelle instantanée.
+- **Salons (Rooms)** : Rejoignez ou créez des salons de discussion dynamiques.
+- **Mises à jour optimistes** : L'interface réagit immédiatement à l'envoi des messages pour une fluidité maximale.
 
-- **Docker** et **Docker Compose** installés
-- Ou **Node.js 20+** et **npm** pour une installation locale
+### 📍 Géolocalisation & Cartes
+- **Partage de position** : Envoyez votre position GPS précise en un clic.
+- **Cartes Interactives** : Visualisez les positions partagées directement dans le chat via une carte OpenStreetMap (Leaflet).
+- **Format JSON** : Protocole d'échange de données structuré pour les coordonnées (`{"type":"geo", ...}`).
 
-## 🛠️ Installation
+### 📸 Multimédia
+- **Appareil Photo** : Module caméra intégré pour prendre des photos sans quitter l'app.
+- **Upload d'Images** : Envoi d'images depuis la galerie.
+- **Visualisation** : Mode "Lightbox" pour voir les images en grand écran.
 
-### Option 1 : Avec Docker (Recommandé)
+### 🔌 Mode Hors Ligne (PWA)
+- **Service Worker** : Mise en cache des ressources pour un chargement instantané.
+- **Indicateur de connexion** : Détection automatique de l'état du réseau.
+- **Manifest** : Installable sur mobile (iOS/Android) et Desktop comme une application native.
 
-#### Développement (avec hot-reload)
+---
+
+## 🛠️ Stack Technique
+
+- **Frontend** : Next.js 15 (App Router), React 19, TypeScript
+- **Backend Realtime** : Serveur HTTP Node.js custom avec Socket.IO intégré à Next.js
+- **UI/UX** : CSS Modules, Glassmorphism design, Responsive mobile-first
+- **Maps** : React Leaflet, OpenStreetMap
+- **Infrastructure** : Docker, Docker Compose, Make
+
+---
+
+## 🚀 Installation & Démarrage
+
+### Prérequis
+- **Docker** et **Docker Compose** (Recommandé)
+- Ou **Node.js 20+** pour une exécution locale
+
+### Option 1 : Via Docker (Recommandé)
+
+Le projet inclut un `Makefile` pour simplifier les commandes Docker.
+
 ```bash
+# Démarrer en mode développement (avec hot-reload)
 make dev
-```
 
-#### Production
-```bash
+# Démarrer en mode production (optimisé)
 make prod
+
+# Voir les logs
+make logs
+
+# Arrêter les conteneurs
+make stop
 ```
 
-#### Commandes Makefile disponibles
-```bash
-make help        # Afficher toutes les commandes
-make dev         # Démarrer en mode développement
-make prod        # Démarrer en mode production
-make stop        # Arrêter tous les conteneurs
-make logs        # Voir les logs
-make build-dev   # Rebuild l'image de dev
-make build-prod  # Rebuild l'image de prod
-```
+L'application sera accessible sur **http://localhost:3010**.
 
-### Option 2 : Installation locale
+### Option 2 : Installation Locale (npm)
 
 ```bash
 # Installer les dépendances
 npm install
 
-# Développement
+# Lancer le serveur de développement
 npm run dev
+# Accessible sur http://localhost:3000
 
-# Production
+# Builder et lancer en production
 npm run build
 npm start
 ```
 
-## 🌐 Accès
+---
 
-L'application est accessible sur **http://localhost:3010**
+## 📂 Structure du Projet
 
-## 📝 License
+```
+.
+├── src/
+│   ├── app/                # Next.js App Router
+│   │   ├── reception/      # Page d'accueil (choix du pseudo/room)
+│   │   ├── room/[id]/      # Interface de chat (MessageList, Input, Map)
+│   │   └── api/            # API Routes (Socket.IO injection)
+│   ├── components/         # Composants Réutilisables
+│   │   ├── CameraCapture   # Module caméra plein écran
+│   │   ├── LocationMap     # Carte Leaflet (Dynamic import)
+│   │   └── ...
+│   ├── lib/
+│   │   ├── socket.ts       # Client Socket.IO singleton
+│   │   ├── storage.ts      # Gestion du LocalStorage (User/Rooms)
+│   │   └── types.ts        # Définitions TypeScript partagées
+│   └── server.ts           # Custom Server pour Socket.IO + Next.js
+├── public/                 # Assets statiques (icons, manifest)
+├── Dockerfile              # Configuration de l'image Docker
+├── compose.yml             # Orchestration Docker
+└── Makefile                # Raccourcis commandes
+```
 
-Projet réalisé dans le cadre du TP PWA - MDS
+## ⚙️ Configuration & Ports
+
+- **Port Application** : `3010` (mappé via Docker) ou `3000` (npm dev par défaut).
+- **Socket.IO** : Écoute sur le même port que le serveur HTTP principal.
+
+## 📱 PWA & Mobile
+
+Pour installer l'application sur mobile :
+1. Ouvrez l'URL dans Chrome (Android) ou Safari (iOS).
+2. Appuyez sur **"Ajouter à l'écran d'accueil"**.
+3. L'application se lance en plein écran sans barres de navigateur.
+
+## 🤝 Contribution
+
+Contributions bienvenues ! Les PRs doivent passer le linter avant d'être fusionnées.
+
+---
+*Projet réalisé dans le cadre du module Mobile Development Strategy (MDS).*
