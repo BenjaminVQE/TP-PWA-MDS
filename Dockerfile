@@ -8,7 +8,34 @@ RUN npm ci
 
 FROM base AS dev
 WORKDIR /app
+# Install Cypress system dependencies
+RUN apk add --no-cache \
+    xvfb \
+    dbus-libs \
+    mesa-gl \
+    glib \
+    nss \
+    nspr \
+    mesa-gbm \
+    pango \
+    cairo \
+    alsa-lib \
+    gtk+3.0 \
+    chromium \
+    freetype \
+    ttf-freefont \
+    harfbuzz
+
+ENV CYPRESS_INSTALL_BINARY=0
+# We don't install the binary during npm install to speed up build,
+# but we might need it for running.
+# Actually, for dev, let's allow binary install or force it.
+# Ideally correct way is to just let npm install handle it, but dependencies are key.
+
 COPY --from=deps /app/node_modules ./node_modules
+# Force install cypress binary because strictly needed for running e2e
+RUN npx cypress install
+
 COPY . .
 CMD ["npm", "run", "dev"]
 

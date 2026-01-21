@@ -10,6 +10,8 @@ help:
 	@echo "  make build-dev  - Rebuild development image"
 	@echo "  make build-prod - Rebuild production image"
 	@echo "  make install    - Initial setup (builds both)"
+	@echo "  make test       - Run unit/component tests"
+	@echo "  make e2e        - Run E2E tests (Cypress)"
 
 # Development (Hot Reload)
 dev:
@@ -41,6 +43,16 @@ install:
 		echo "Installing package in container: $(filter-out $@,$(MAKECMDGOALS))"; \
 		docker compose -f compose.dev.yml exec next-app-dev npm install $(filter-out $@,$(MAKECMDGOALS)); \
 	fi
+
+# Tests
+test:
+	docker compose -f compose.dev.yml exec next-app-dev npm test
+
+test-watch:
+	docker compose -f compose.dev.yml exec next-app-dev npm run test:watch
+
+e2e:
+	docker compose -f compose.dev.yml exec next-app-dev npm run e2e
 
 %:
 	@:
