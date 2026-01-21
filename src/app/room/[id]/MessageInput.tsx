@@ -27,8 +27,9 @@ export default function MessageInput({
                 }}
                 style={{
                     display: "flex",
-                    gap: "0.5rem",
-                    alignItems: "flex-end"
+                    gap: "0.25rem",
+                    alignItems: "center",
+                    width: "100%"
                 }}
             >
                 {showCamera && (
@@ -46,13 +47,19 @@ export default function MessageInput({
                     type="button"
                     onClick={() => setShowCamera(true)}
                     style={{
-                        padding: "0.75rem",
+                        padding: "0.5rem",
                         borderRadius: "50%",
                         background: "#f3f4f6",
                         border: "none",
                         cursor: "pointer",
                         fontSize: "1.25rem",
-                        lineHeight: 1
+                        lineHeight: 1,
+                        flexShrink: 0,
+                        width: "2.5rem",
+                        height: "2.5rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
                     }}
                 >
                     📷
@@ -62,13 +69,19 @@ export default function MessageInput({
                     type="button"
                     onClick={() => fileRef.current?.click()}
                     style={{
-                        padding: "0.75rem",
+                        padding: "0.5rem",
                         borderRadius: "50%",
                         background: "#f3f4f6",
                         border: "none",
                         cursor: "pointer",
                         fontSize: "1.25rem",
-                        lineHeight: 1
+                        lineHeight: 1,
+                        flexShrink: 0,
+                        width: "2.5rem",
+                        height: "2.5rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
                     }}
                 >
                     🖼️
@@ -80,6 +93,9 @@ export default function MessageInput({
                     accept="image/*"
                     hidden
                     onChange={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
                         const file = e.target.files?.[0];
                         if (!file) return;
 
@@ -114,13 +130,19 @@ export default function MessageInput({
                         }
                     }}
                     style={{
-                        padding: "0.75rem",
+                        padding: "0.5rem",
                         borderRadius: "50%",
                         background: "#f3f4f6",
                         border: "none",
                         cursor: "pointer",
                         fontSize: "1.25rem",
-                        lineHeight: 1
+                        lineHeight: 1,
+                        flexShrink: 0,
+                        width: "2.5rem",
+                        height: "2.5rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
                     }}
                 >
                     📍
@@ -134,11 +156,13 @@ export default function MessageInput({
                     placeholder="Type a message..."
                     style={{
                         flex: 1,
+                        minWidth: 0,
                         background: "#f3f4f6",
                         borderRadius: "1rem",
-                        padding: "0.75rem 1rem",
+                        padding: "0.5rem 0.75rem",
                         border: "none",
-                        outline: "none"
+                        outline: "none",
+                        height: "2.5rem"
                     }}
                 />
 
@@ -147,7 +171,7 @@ export default function MessageInput({
                     type="submit"
                     disabled={!text.trim()}
                     style={{
-                        padding: "0.75rem",
+                        padding: "0.5rem",
                         borderRadius: "50%",
                         background: "var(--primary)",
                         color: "white",
@@ -157,7 +181,13 @@ export default function MessageInput({
                             : "not-allowed",
                         opacity: text.trim() ? 1 : 0.5,
                         boxShadow:
-                            "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+                            "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                        flexShrink: 0,
+                        width: "2.5rem",
+                        height: "2.5rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
                     }}
                 >
                     ➤
