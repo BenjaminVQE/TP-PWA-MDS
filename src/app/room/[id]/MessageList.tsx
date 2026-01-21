@@ -15,129 +15,199 @@ export default function MessageList({
     user: User;
 }) {
     const endRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
 
-    const hasScrolledRef = useRef(false);
+    // Track if we should stick to bottom
+    const isAtBottomRef = useRef(true);
+    const hasInitialScrolledRef = useRef(false);
 
-    // 🔽 Auto-scroll vers le bas uniquement lors du chargement initial des messages
+    // Handle scroll events to detect if user is at bottom
+    const handleScroll = () => {
+        if (!containerRef.current) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 50; // 50px threshold
+
+        isAtBottomRef.current = isAtBottom;
+        setShowScrollButton(!isAtBottom);
+    };
+
+    // Auto-scroll logic
     useEffect(() => {
-        if (!hasScrolledRef.current && messages.length > 0) {
-            endRef.current?.scrollIntoView({ behavior: "auto" }); // "auto" for instant jump on load, "smooth" might be distracting
-            hasScrolledRef.current = true;
+        if (messages.length === 0) return;
+
+        // 1. Initial Load: Always scroll to bottom
+        if (!hasInitialScrolledRef.current) {
+            // Scroll immediately
+            endRef.current?.scrollIntoView({ behavior: "auto" });
+
+            // Scroll again after a short delay to account for image/map loading
+            setTimeout(() => {
+                endRef.current?.scrollIntoView({ behavior: "auto" });
+            }, 100);
+
+            hasInitialScrolledRef.current = true;
+            return;
+        }
+
+        // 2. New Message: Scroll only if we were already at bottom
+        if (isAtBottomRef.current) {
+            endRef.current?.scrollIntoView({ behavior: "smooth" });
+        } else {
+            // Otherwise show button (handled by handleScroll state update usually, but ensure it's on)
+            setShowScrollButton(true);
         }
     }, [messages]);
 
-    return (
-        <div
-            className="chat-scroll"
-            style={{
-                flex: 1,
-                overflowY: "auto",
-                padding: "0.5rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem"
-            }}
-        >
-            {messages.map((msg, idx) => {
-                const isMe = msg.senderName === user.pseudo;
+    const scrollToBottom = () => {
+        endRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
-                return (
-                    <div
-                        key={`${msg.timestamp}-${idx}`}
-                        style={{
-                            display: "flex",
-                            justifyContent: isMe ? "flex-end" : "flex-start"
-                        }}
-                    >
+    return (
+        <div style={{ position: "relative", flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div
+                ref={containerRef}
+                onScroll={handleScroll}
+                className="chat-scroll"
+                style={{
+                    flex: 1,
+                    overflowY: "auto",
+                    padding: "0.5rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem"
+                }}
+            >
+                {messages.map((msg, idx) => {
+                    const isMe = msg.senderName === user.pseudo;
+
+                    return (
                         <div
+                            key={`${msg.timestamp}-${idx}`}
                             style={{
-                                maxWidth: "80%",
-                                padding: "0.75rem",
-                                borderRadius: "1rem",
-                                borderBottomRightRadius: isMe ? 0 : "1rem",
-                                borderBottomLeftRadius: isMe ? "1rem" : 0,
-                                background: isMe
-                                    ? "var(--primary-gradient)"
-                                    : "white",
-                                color: isMe ? "white" : "#111827",
-                                boxShadow: isMe
-                                    ? "none"
-                                    : "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+                                display: "flex",
+                                justifyContent: isMe ? "flex-end" : "flex-start"
                             }}
                         >
-                            {!isMe && (
-                                <div
-                                    style={{
-                                        fontSize: "0.75rem",
-                                        opacity: 0.75,
-                                        marginBottom: "0.25rem"
-                                    }}
-                                >
-                                    {msg.senderName}
-                                </div>
-                            )}
-
-                            {msg.location && (
-                                <div style={{ marginBottom: "0.5rem" }}>
-                                    <LocationMap lat={msg.location.lat} lng={msg.location.lng} />
-                                </div>
-                            )}
-
-                            {msg.imageUrl && (
-                                <img
-                                    src={msg.imageUrl}
-                                    alt="Attachment"
-                                    onClick={() => setSelectedImage(msg.imageUrl || null)}
-                                    style={{
-                                        borderRadius: "0.5rem",
-                                        marginBottom: "0.5rem",
-                                        maxWidth: "100%",
-                                        maxHeight: "200px",
-                                        cursor: "pointer"
-                                    }}
-                                />
-                            )}
-
-                            {msg.content && (
-                                msg.content.startsWith("data:image/") ? (
-                                    !msg.imageUrl && (
-                                        <img
-                                            src={msg.content}
-                                            alt="Base64 Image"
-                                            onClick={() => setSelectedImage(msg.content)}
-                                            style={{
-                                                borderRadius: "0.5rem",
-                                                maxWidth: "100%",
-                                                maxHeight: "200px",
-                                                cursor: "pointer"
-                                            }}
-                                        />
-                                    )
-                                ) : (
-                                    <p>{msg.content}</p>
-                                )
-                            )}
-
                             <div
                                 style={{
-                                    fontSize: "0.625rem",
-                                    opacity: 0.7,
-                                    textAlign: "right",
-                                    marginTop: "0.25rem"
+                                    maxWidth: "80%",
+                                    padding: "0.75rem",
+                                    borderRadius: "1rem",
+                                    borderBottomRightRadius: isMe ? 0 : "1rem",
+                                    borderBottomLeftRadius: isMe ? "1rem" : 0,
+                                    background: isMe
+                                        ? "var(--primary-gradient)"
+                                        : "white",
+                                    color: isMe ? "white" : "#111827",
+                                    boxShadow: isMe
+                                        ? "none"
+                                        : "0 1px 2px 0 rgb(0 0 0 / 0.05)"
                                 }}
                             >
-                                {new Date(msg.timestamp).toLocaleTimeString(
-                                    [],
-                                    { hour: "2-digit", minute: "2-digit" }
+                                {!isMe && (
+                                    <div
+                                        style={{
+                                            fontSize: "0.75rem",
+                                            opacity: 0.75,
+                                            marginBottom: "0.25rem"
+                                        }}
+                                    >
+                                        {msg.senderName}
+                                    </div>
                                 )}
+
+                                {msg.location && (
+                                    <div style={{ marginBottom: "0.5rem" }}>
+                                        <LocationMap lat={msg.location.lat} lng={msg.location.lng} />
+                                    </div>
+                                )}
+
+                                {msg.imageUrl && (
+                                    <img
+                                        src={msg.imageUrl}
+                                        alt="Attachment"
+                                        onClick={() => setSelectedImage(msg.imageUrl || null)}
+                                        style={{
+                                            borderRadius: "0.5rem",
+                                            marginBottom: "0.5rem",
+                                            maxWidth: "100%",
+                                            maxHeight: "200px",
+                                            cursor: "pointer"
+                                        }}
+                                    />
+                                )}
+
+                                {msg.content && (
+                                    msg.content.startsWith("data:image/") ? (
+                                        !msg.imageUrl && (
+                                            <img
+                                                src={msg.content}
+                                                alt="Base64 Image"
+                                                onClick={() => setSelectedImage(msg.content)}
+                                                style={{
+                                                    borderRadius: "0.5rem",
+                                                    maxWidth: "100%",
+                                                    maxHeight: "200px",
+                                                    cursor: "pointer"
+                                                }}
+                                            />
+                                        )
+                                    ) : (
+                                        <p>{msg.content}</p>
+                                    )
+                                )}
+
+                                <div
+                                    style={{
+                                        fontSize: "0.625rem",
+                                        opacity: 0.7,
+                                        textAlign: "right",
+                                        marginTop: "0.25rem"
+                                    }}
+                                >
+                                    {new Date(msg.timestamp).toLocaleTimeString(
+                                        [],
+                                        { hour: "2-digit", minute: "2-digit" }
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                );
-            })}
+                    );
+                })}
 
-            <div ref={endRef} />
+                <div ref={endRef} />
+            </div>
+
+            {/* Floating Scroll Button */}
+            {showScrollButton && (
+                <button
+                    onClick={scrollToBottom}
+                    className="animate-fade-in"
+                    style={{
+                        position: "absolute",
+                        bottom: "1rem",
+                        right: "1rem",
+                        width: "3rem",
+                        height: "3rem",
+                        borderRadius: "50%",
+                        background: "var(--primary)",
+                        color: "white",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.2)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "1.5rem",
+                        zIndex: 10
+                    }}
+                >
+                    ↓
+                </button>
+            )}
 
             {selectedImage && (
                 <div
