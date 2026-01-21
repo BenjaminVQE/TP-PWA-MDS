@@ -17,9 +17,14 @@ export default function MessageList({
     const endRef = useRef<HTMLDivElement>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    // 🔽 Auto-scroll vers le bas à chaque nouveau message
+    const hasScrolledRef = useRef(false);
+
+    // 🔽 Auto-scroll vers le bas uniquement lors du chargement initial des messages
     useEffect(() => {
-        endRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (!hasScrolledRef.current && messages.length > 0) {
+            endRef.current?.scrollIntoView({ behavior: "auto" }); // "auto" for instant jump on load, "smooth" might be distracting
+            hasScrolledRef.current = true;
+        }
     }, [messages]);
 
     return (
