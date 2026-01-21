@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { getUser, getMessages, getRooms } from "@/lib/storage";
+import { getUser, getRooms } from "@/lib/storage";
 import { User, Room, Message } from "@/lib/types";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import RoomHeader from "./RoomHeader";
@@ -37,7 +37,6 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
             });
         }
 
-        setMessages(getMessages(id));
     }, [id, router]);
 
     const { isConnected, participants, sendMessage } =

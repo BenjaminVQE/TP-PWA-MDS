@@ -7,6 +7,7 @@ import { getUser, saveRooms } from "@/lib/storage";
 import { User, Room } from "@/lib/types";
 import UserProfile from "@/components/UserProfile";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import BatteryIndicator from "@/components/BatteryIndicator";
 import socket from "@/lib/socket";
 import { fetchRooms } from "@/lib/api";
 
@@ -104,16 +105,19 @@ export default function Reception() {
                         </button>
                     </div>
                 </div>
-                <Link href="/gallery" style={{
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    background: "rgba(0,0,0,0.05)",
-                    padding: "0.25rem 0.75rem",
-                    borderRadius: "9999px",
-                    textDecoration: "none"
-                }}>
-                    Gallery
-                </Link>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <BatteryIndicator />
+                    <Link href="/gallery" style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        background: "rgba(0,0,0,0.05)",
+                        padding: "0.25rem 0.75rem",
+                        borderRadius: "9999px",
+                        textDecoration: "none"
+                    }}>
+                        Gallery
+                    </Link>
+                </div>
             </header>
 
             {/* Room List */}

@@ -15,8 +15,7 @@ export function useRoomSocket({
   const [isConnected, setIsConnected] = useState(false);
   const [participants, setParticipants] = useState<string[]>([]);
 
-  // On stocke les messages envoyés localement pour les filtrer ensuite
-  const sentLocal = useRef<Set<string>>(new Set());
+
 
   useEffect(() => {
     if (!room || !user) return;
@@ -35,27 +34,52 @@ export function useRoomSocket({
     const onDisconnect = () => setIsConnected(false);
 
     const onMsg = (data: any) => {
+      let content = data.content || "";
+      let location = data.location || null;
 
+      // Check if content is our specific JSON format: {"type":"geo", ...} or {"type":"LOCATION", ...}
+      // We prioritize this content parsing if found, to ensure consistency
+      if (typeof content === "string" && content.trim().startsWith("{")) {
+        try {
+          const parsed = JSON.parse(content);
+          if (parsed && (parsed.type === "geo" || parsed.type === "LOCATION") && typeof parsed.lat === "number" && typeof parsed.lng === "number") {
+            location = { lat: parsed.lat, lng: parsed.lng };
+            content = "Shared a location";
+          }
+        } catch (e) {
+          // Not valid JSON or not our format, ignore
+        }
+      }
 
-      // Si on a déjà envoyé ce message localement, on ignore
-      if (data.localId && sentLocal.current.has(data.localId)) return;
+      // Fallback for legacy "LOCATION:" prefix if strictly needed, but JSON format above is preferred
+      if (!location && typeof content === "string" && content.startsWith("LOCATION:")) {
+        try {
+          location = JSON.parse(content.substring(9));
+          content = "Shared a location";
+        } catch (e) {
+          console.error("Failed to parse LOCATION: prefix", e);
+        }
+      }
 
-      // Si le message vient de nous (basé sur le pseudo ou userId), on ignore aussi
-      if (user && (data.userId === user.id || data.pseudo === user.pseudo)) return;
+      // Ensure location has valid numbers if it came from data.location directly
+      if (location && (typeof location.lat !== 'number' || typeof location.lng !== 'number')) {
+        location = null;
+      }
 
       const msg: Message = {
-        id: crypto.randomUUID(),
         roomId: room.id,
-        senderId: data.userId,
         senderName: data.pseudo,
-        content: data.content || "",
+        content: content,
         imageUrl: data.imageUrl || data.image_data || null,
+        location: location,
         timestamp: Date.now()
       };
 
       saveMessage(msg);
       setMessages(prev => [...prev, msg]);
     };
+
+
 
     const onJoinedRoom = (d: any) => {
       // Si d.clients est un objet, on récupère les pseudos
@@ -81,38 +105,30 @@ export function useRoomSocket({
     };
   }, [room, user, setMessages]);
 
-  const sendMessage = (content: string, imageUrl?: string) => {
+  const sendMessage = (content: string, imageUrl?: string, location?: { lat: number; lng: number }) => {
     if (!room || !user) return;
 
-    // localId unique
-    const localId = crypto.randomUUID();
-
-    // On stocke l'id local
-    sentLocal.current.add(localId);
-
     // Si une image est fournie, le contenu devient l'image en Base64
-    const finalContent = imageUrl || content;
+    let finalContent = imageUrl || content;
 
-    const msg: Message = {
-      id: crypto.randomUUID(),
-      roomId: room.id,
-      senderId: user.id,
-      senderName: user.pseudo,
-      content: finalContent,
-      imageUrl,
-      timestamp: Date.now()
-    };
+    // Use the specific JSON format requested for location
+    if (location && !imageUrl) {
+      finalContent = JSON.stringify({
+        type: "geo",
+        lat: location.lat,
+        lng: location.lng,
+        accuracy: 0
+      });
+    }
 
-    saveMessage(msg);
-    setMessages(prev => [...prev, msg]);
-
+    // On envoie direct au serveur sans sauvegarde locale optimiste
     socket.emit("chat-msg", {
       roomName: room.name,
       userId: user.id,
       pseudo: user.pseudo,
       content: finalContent,
       imageUrl,
-      localId // 🔥 on l'envoie au serveur
+      location // We still send it just in case
     });
   };
 

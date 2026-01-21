@@ -65,15 +65,10 @@ export const saveRoom = (room: Room) => {
     saveRooms([room]);
 };
 
-// Messages
-export const getMessages = (roomId: string): Message[] => {
-    return getLocalStorage(`${STORAGE_KEYS.MESSAGES}${roomId}`) || [];
-};
-
 export const saveMessage = (message: Message) => {
-    const messages = getMessages(message.roomId);
-    messages.push(message);
-    setLocalStorage(`${STORAGE_KEYS.MESSAGES}${message.roomId}`, messages);
+    // We strictly DO NOT save the message content to localStorage anymore.
+    // However, we MUST update the Room's "lastActivity" and "lastMessage"
+    // so the reception list shows the latest info.
 
     // Update Room last activity
     const rooms = getRooms();

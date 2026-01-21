@@ -1,5 +1,11 @@
 import { Message, User } from "@/lib/types";
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+
+const LocationMap = dynamic(() => import("@/components/LocationMap"), {
+    ssr: false,
+    loading: () => <div style={{ height: "200px", background: "#f0f0f0", borderRadius: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading Map...</div>
+});
 
 export default function MessageList({
     messages,
@@ -28,12 +34,12 @@ export default function MessageList({
                 gap: "1rem"
             }}
         >
-            {messages.map((msg) => {
-                const isMe = msg.senderId === user.id;
+            {messages.map((msg, idx) => {
+                const isMe = msg.senderName === user.pseudo;
 
                 return (
                     <div
-                        key={msg.id}
+                        key={`${msg.timestamp}-${idx}`}
                         style={{
                             display: "flex",
                             justifyContent: isMe ? "flex-end" : "flex-start"
@@ -64,6 +70,12 @@ export default function MessageList({
                                     }}
                                 >
                                     {msg.senderName}
+                                </div>
+                            )}
+
+                            {msg.location && (
+                                <div style={{ marginBottom: "0.5rem" }}>
+                                    <LocationMap lat={msg.location.lat} lng={msg.location.lng} />
                                 </div>
                             )}
 

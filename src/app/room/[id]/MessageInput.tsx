@@ -4,7 +4,7 @@ import CameraCapture from "@/components/CameraCapture";
 export default function MessageInput({
     onSend
 }: {
-    onSend: (content: string, imageUrl?: string) => void;
+    onSend: (content: string, imageUrl?: string, location?: { lat: number; lng: number }) => void;
 }) {
     const [text, setText] = useState("");
     const [showCamera, setShowCamera] = useState(false);
@@ -91,6 +91,40 @@ export default function MessageInput({
                         if (fileRef.current) fileRef.current.value = "";
                     }}
                 />
+
+                {/* Location button */}
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                    const { latitude, longitude } = position.coords;
+                                    // Make sure type definition in props matches
+                                    // We'll need to update the prop signature below too
+                                    onSend("Shared a location", undefined, { lat: latitude, lng: longitude });
+                                },
+                                (error) => {
+                                    alert("Unable to retrieve your location");
+                                    console.error(error);
+                                }
+                            );
+                        } else {
+                            alert("Geolocation is not supported by this browser.");
+                        }
+                    }}
+                    style={{
+                        padding: "0.75rem",
+                        borderRadius: "50%",
+                        background: "#f3f4f6",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "1.25rem",
+                        lineHeight: 1
+                    }}
+                >
+                    📍
+                </button>
 
                 {/* Text input */}
                 <input

@@ -5,13 +5,15 @@ export interface User {
 }
 
 export interface Message {
-    id: string;
-    senderId: string;
     senderName: string;
     content: string;
     timestamp: number;
     imageUrl?: string;
     roomId: string;
+    location?: {
+        lat: number;
+        lng: number;
+    };
 }
 
 export interface Room {

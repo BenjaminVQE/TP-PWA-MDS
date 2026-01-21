@@ -26,6 +26,11 @@ export default function NotificationManager() {
                         icon: "/icons/icon-192x192.png",
                         tag: data.roomName
                     });
+
+                    // Vibrate device
+                    if (typeof navigator !== "undefined" && navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
                 }
             }
         };
