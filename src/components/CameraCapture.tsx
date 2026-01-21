@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { savePhoto } from "@/lib/storage";
+import { v4 as uuidv4 } from "uuid"; // We might need a UUID generator or random ID
 
 interface CameraCaptureProps {
     onCapture: (imageDataUrl: string) => void;
@@ -35,6 +37,14 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
             if (ctx) {
                 ctx.drawImage(videoRef.current, 0, 0);
                 const dataUrl = canvas.toDataURL("image/jpeg");
+
+                // Save to App Gallery (LocalStorage)
+                savePhoto({
+                    id: crypto.randomUUID(),
+                    url: dataUrl,
+                    timestamp: Date.now()
+                });
+
                 onCapture(dataUrl);
                 stopCamera();
             }
