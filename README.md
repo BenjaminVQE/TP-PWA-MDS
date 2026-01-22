@@ -122,5 +122,5 @@ Pour installer l'application sur mobile :
 
 Contributions bienvenues ! Les PRs doivent passer le linter avant d'être fusionnées.
 
----
+----
 *Projet réalisé dans le cadre du module Mobile Development Strategy (MDS).*
