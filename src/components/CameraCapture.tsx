@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect } from "react";
 import { savePhoto } from "@/lib/storage";
-import { v4 as uuidv4 } from "uuid"; // We might need a UUID generator or random ID
 
 interface CameraCaptureProps {
     onCapture: (imageDataUrl: string) => void;

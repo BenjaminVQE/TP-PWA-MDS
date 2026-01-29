@@ -118,9 +118,6 @@ Pour installer l'application sur mobile :
 2. Appuyez sur **"Ajouter à l'écran d'accueil"**.
 3. L'application se lance en plein écran sans barres de navigateur.
 
-## 🤝 Contribution
+---
+*Projet réalisé dans le cadre du module Développement Frontend Avancé.*
 
-Contributions bienvenues ! Les PRs doivent passer le linter avant d'être fusionnées.
-
-----
-*Projet réalisé dans le cadre du module Mobile Development Strategy (MDS).*
