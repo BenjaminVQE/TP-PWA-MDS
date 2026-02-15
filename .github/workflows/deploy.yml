@@ -36,10 +36,10 @@ jobs:
         run: |
           ssh $VPS_USER@$VPS_IP "bash -s" << EOF
             echo "--Start Pulling image--"
-            sudo docker pull $REGISTRY_NAME/pwa-messenger:latest
+            docker pull $REGISTRY_NAME/pwa-messenger:latest
             echo "--End Pulling image--"
-            sudo docker stop pwa-messenger-container || true
-            sudo docker rm pwa-messenger-container || true
+            docker stop pwa-messenger-container || true
+            docker rm pwa-messenger-container || true
             echo "--Running container--"
-            sudo docker run -p 3010:3000 --name pwa-messenger-container -d --restart unless-stopped $REGISTRY_NAME/pwa-messenger:latest
+            docker run -p 3010:3000 --name pwa-messenger-container -d --restart unless-stopped $REGISTRY_NAME/pwa-messenger:latest
           EOF
